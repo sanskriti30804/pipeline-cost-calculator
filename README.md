@@ -69,7 +69,9 @@ Users can input pipeline parameters and instantly view:
 * Monthly cost
 * Stage-wise distribution
 
-  ![Pipeline Cost Calculator](screenshot.png)
+  <p align="center">
+  <img src="screenshot.png" width="700">
+</p>
 
 ---
 
