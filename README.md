@@ -69,8 +69,11 @@ Users can input pipeline parameters and instantly view:
 * Monthly cost
 * Stage-wise distribution
 
+  ![Pipeline Cost Calculator](screenshot.png)
+
 ---
 
 ## 📌 Note
 
 This is a simulation-based project and does not require actual Jenkins setup.
+
