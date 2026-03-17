@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pipeline Cost Calculator</title>
+    <meta
+      name="description"
+      content="Calculate CI/CD pipeline execution costs across Jenkins, GitHub Actions, and GitLab CI."
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="bg" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <!-- Simple inline icon -->
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M4 7.5C4 6.12 5.12 5 6.5 5h11C18.88 5 20 6.12 20 7.5v9c0 1.38-1.12 2.5-2.5 2.5h-11C5.12 19 4 17.88 4 16.5v-9Z"
+              stroke="currentColor"
+              stroke-width="1.6"
+            />
+            <path
+              d="M7 9h10M7 12h6M7 15h8"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+            />
+          </svg>
+        </div>
+        <div>
+          <div class="brand__title">Pipeline Cost Calculator</div>
+          <div class="brand__sub">Estimate CI/CD compute + storage costs</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <div class="pill" title="Storage rate used for calculation">
+          <span class="pill__label">Storage rate</span>
+          <span class="pill__value" id="storageRatePill">₹2/GB</span>
+        </div>
+
+        <button id="themeToggle" class="icon-btn" type="button" aria-label="Toggle dark mode">
+          <span class="icon-btn__icon" aria-hidden="true">
+            <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12Z"
+                stroke="currentColor"
+                stroke-width="1.8"
+              />
+              <path
+                d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+            </svg>
+            <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M21 14.5A8.5 8.5 0 0 1 9.5 3a7 7 0 1 0 11.5 11.5Z"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <span class="icon-btn__text">Theme</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section class="grid">
+        <div class="card card--form">
+          <div class="card__header">
+            <h1 class="card__title">Inputs</h1>
+            <p class="card__subtitle">Enter a few values and we’ll estimate pipeline spend.</p>
+          </div>
+
+          <form id="calcForm" class="form" novalidate>
+            <div class="field">
+              <label for="tool">CI/CD tool</label>
+              <div class="select">
+                <select id="tool" name="tool" required>
+                  <option value="jenkins">Jenkins (+10%)</option>
+                  <option value="github">GitHub Actions (+15%)</option>
+                  <option value="gitlab">GitLab CI (+12%)</option>
+                </select>
+                <span class="select__chev" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M7 10l5 5 5-5"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+              </div>
+            </div>
+
+            <div class="two-col">
+              <div class="field">
+                <label for="buildsPerDay">Builds per day</label>
+                <input
+                  id="buildsPerDay"
+                  name="buildsPerDay"
+                  inputmode="numeric"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="e.g., 25"
+                  required
+                />
+                <div class="hint">How many pipeline runs you execute daily.</div>
+              </div>
+
+              <div class="field">
+                <label for="durationMin">Avg build duration (minutes)</label>
+                <input
+                  id="durationMin"
+                  name="durationMin"
+                  inputmode="decimal"
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  placeholder="e.g., 12.5"
+                  required
+                />
+                <div class="hint">Average runtime per build.</div>
+              </div>
+            </div>
+
+            <div class="two-col">
+              <div class="field">
+                <label for="costPerMin">Cost per minute</label>
+                <div class="money">
+                  <select id="currency" class="money__currency" aria-label="Currency">
+                    <option value="₹">₹</option>
+                    <option value="$">$</option>
+                  </select>
+                  <input
+                    id="costPerMin"
+                    name="costPerMin"
+                    inputmode="decimal"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="e.g., 0.35"
+                    required
+                  />
+                </div>
+                <div class="hint">Your compute rate per minute.</div>
+              </div>
+
+              <div class="field">
+                <label for="storageGb">Storage usage (GB)</label>
+                <input
+                  id="storageGb"
+                  name="storageGb"
+                  inputmode="decimal"
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  placeholder="e.g., 40"
+                  required
+                />
+                <div class="hint">Artifacts, logs, caches, etc.</div>
+              </div>
+            </div>
+
+            <div class="stage-card">
+              <div class="stage-card__head">
+                <div class="stage-card__title">Pipeline stages</div>
+                <div class="stage-card__meta">Split compute across Build / Test / Deploy (auto-normalized)</div>
+              </div>
+              <div class="stage-grid" role="group" aria-label="Pipeline stage split in percent">
+                <div class="field">
+                  <label for="stageBuildPct">Build (%)</label>
+                  <input
+                    id="stageBuildPct"
+                    name="stageBuildPct"
+                    inputmode="decimal"
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="e.g., 45"
+                  />
+                </div>
+                <div class="field">
+                  <label for="stageTestPct">Test (%)</label>
+                  <input
+                    id="stageTestPct"
+                    name="stageTestPct"
+                    inputmode="decimal"
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="e.g., 40"
+                  />
+                </div>
+                <div class="field">
+                  <label for="stageDeployPct">Deploy (%)</label>
+                  <input
+                    id="stageDeployPct"
+                    name="stageDeployPct"
+                    inputmode="decimal"
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="e.g., 15"
+                  />
+                </div>
+              </div>
+              <div class="hint">
+                Leave blank to use an even split. If the total isn’t 100, we’ll scale proportions to 100 automatically.
+              </div>
+            </div>
+
+            <div id="formError" class="alert" role="alert" aria-live="polite" hidden></div>
+
+            <div class="btn-row">
+              <button class="btn btn--primary" type="submit" id="calcBtn">
+                <span class="btn__icon" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M5 7h14M7 7V5.8A2.8 2.8 0 0 1 9.8 3h4.4A2.8 2.8 0 0 1 17 5.8V7"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                    <path
+                      d="M7.5 11h9M7.5 14.5h6.5"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                    <path
+                      d="M6 7v13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                    />
+                  </svg>
+                </span>
+                Calculate Cost
+              </button>
+              <button class="btn btn--ghost" type="button" id="resetBtn">Reset</button>
+            </div>
+
+            <div class="fineprint">
+              Overhead is applied to compute cost only. Storage is billed at a fixed rate.
+            </div>
+          </form>
+        </div>
+
+        <div class="card card--results">
+          <div class="card__header">
+            <h2 class="card__title">Results</h2>
+            <p class="card__subtitle">Daily and monthly estimates with a breakdown.</p>
+          </div>
+
+          <div class="results" id="results" aria-live="polite">
+            <div class="stat-grid">
+              <div class="stat">
+                <div class="stat__label">Daily cost</div>
+                <div class="stat__value" id="dailyCost">—</div>
+              </div>
+              <div class="stat">
+                <div class="stat__label">Monthly cost</div>
+                <div class="stat__value" id="monthlyCost">—</div>
+              </div>
+            </div>
+
+            <div class="breakdown">
+              <div class="breakdown__row">
+                <div class="breakdown__label">
+                  <span class="dot dot--compute" aria-hidden="true"></span>
+                  Compute cost
+                </div>
+                <div class="breakdown__value" id="computeCost">—</div>
+              </div>
+              <div class="breakdown__row">
+                <div class="breakdown__label">
+                  <span class="dot dot--storage" aria-hidden="true"></span>
+                  Storage cost
+                </div>
+                <div class="breakdown__value" id="storageCost">—</div>
+              </div>
+              <div class="breakdown__row breakdown__row--subtle">
+                <div class="breakdown__label">Tool overhead</div>
+                <div class="breakdown__value" id="overheadPct">—</div>
+              </div>
+            </div>
+
+            <div class="viz">
+              <div class="viz__header">
+                <div class="viz__title">Cost split</div>
+                <div class="viz__meta" id="vizMeta">Compute vs storage</div>
+              </div>
+              <div class="bars" aria-label="Bar chart: compute vs storage">
+                <div class="bar">
+                  <div class="bar__label">Compute</div>
+                  <div class="bar__track">
+                    <div class="bar__fill bar__fill--compute" id="barCompute" style="width: 0%"></div>
+                  </div>
+                  <div class="bar__amount" id="barComputeAmount">—</div>
+                </div>
+                <div class="bar">
+                  <div class="bar__label">Storage</div>
+                  <div class="bar__track">
+                    <div class="bar__fill bar__fill--storage" id="barStorage" style="width: 0%"></div>
+                  </div>
+                  <div class="bar__amount" id="barStorageAmount">—</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="viz">
+              <div class="viz__header">
+                <div class="viz__title">Stage distribution</div>
+                <div class="viz__meta" id="stageMeta">Build vs test vs deploy (compute only)</div>
+              </div>
+              <div class="bars" aria-label="Bar chart: build vs test vs deploy">
+                <div class="bar">
+                  <div class="bar__label">
+                    <span class="dot dot--build" aria-hidden="true"></span>
+                    Build
+                  </div>
+                  <div class="bar__track">
+                    <div class="bar__fill bar__fill--build" id="barBuild" style="width: 0%"></div>
+                  </div>
+                  <div class="bar__amount" id="barBuildAmount">—</div>
+                </div>
+                <div class="bar">
+                  <div class="bar__label">
+                    <span class="dot dot--test" aria-hidden="true"></span>
+                    Test
+                  </div>
+                  <div class="bar__track">
+                    <div class="bar__fill bar__fill--test" id="barTest" style="width: 0%"></div>
+                  </div>
+                  <div class="bar__amount" id="barTestAmount">—</div>
+                </div>
+                <div class="bar">
+                  <div class="bar__label">
+                    <span class="dot dot--deploy" aria-hidden="true"></span>
+                    Deploy
+                  </div>
+                  <div class="bar__track">
+                    <div class="bar__fill bar__fill--deploy" id="barDeploy" style="width: 0%"></div>
+                  </div>
+                  <div class="bar__amount" id="barDeployAmount">—</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="note" id="assumptions">
+              <div class="note__title">Assumptions</div>
+              <ul class="note__list">
+                <li><span class="kbd">30 days</span> per month (flat estimate)</li>
+                <li>Storage billed at <span class="kbd" id="storageRateNote">₹2/GB</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <span>Made for quick estimates. Adjust rates to match your environment.</span>
+      </footer>
+    </main>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
+
