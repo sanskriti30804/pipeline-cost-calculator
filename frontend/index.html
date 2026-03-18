@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pipeline Cost Calculator – CI/CD Cost Estimation Tool</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <div class="bg"></div>
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">PC</div>
+        <div>
+          <div class="title">Pipeline Cost Calculator</div>
+          <div class="subtitle">CI/CD cost estimation (Jenkins-style)</div>
+        </div>
+      </div>
+      <a class="pill" href="https://www.jenkins.io/" target="_blank" rel="noreferrer">Jenkins concepts</a>
+    </header>
+
+    <main class="container">
+      <section class="grid">
+        <div class="card">
+          <div class="cardHeader">
+            <h2>Pipeline inputs</h2>
+            <p>Estimate compute + storage cost with simple, explainable math.</p>
+          </div>
+
+          <form id="cost-form" class="form">
+            <div class="field">
+              <label for="runsPerDay">Runs / day</label>
+              <input id="runsPerDay" name="runsPerDay" type="number" min="1" step="1" value="20" required />
+              <div class="hint">How many pipeline runs happen in a typical day.</div>
+            </div>
+
+            <div class="field">
+              <label for="executionTimeMinutes">Execution time (minutes)</label>
+              <input
+                id="executionTimeMinutes"
+                name="executionTimeMinutes"
+                type="number"
+                min="1"
+                step="1"
+                value="12"
+                required
+              />
+              <div class="hint">Average duration per run.</div>
+            </div>
+
+            <div class="field">
+              <label for="agents">Agents (parallel executors)</label>
+              <input id="agents" name="agents" type="number" min="1" step="1" value="2" required />
+              <div class="hint">Number of agents used per run.</div>
+            </div>
+
+            <div class="field">
+              <label for="costPerMinute">Cost / minute (₹)</label>
+              <input
+                id="costPerMinute"
+                name="costPerMinute"
+                type="number"
+                min="0.0001"
+                step="0.0001"
+                value="0.05"
+                placeholder="e.g. 5 ₹"
+                required
+              />
+              <div class="hint">Compute cost per agent-minute.</div>
+            </div>
+
+            <div class="field">
+              <label for="storageMonthly">Storage (monthly, ₹)</label>
+              <input
+                id="storageMonthly"
+                name="storageMonthly"
+                type="number"
+                min="0"
+                step="0.01"
+                value="15"
+                placeholder="e.g. 500 ₹"
+                required
+              />
+              <div class="hint">Artifacts, logs, cache, etc. per month.</div>
+            </div>
+
+            <div class="actions">
+              <button class="btn primary" type="submit">
+                <span>Calculate</span>
+              </button>
+              <button class="btn ghost" id="reset-btn" type="button">Reset</button>
+            </div>
+
+            <div class="errorBox" id="form-error" role="alert" aria-live="polite"></div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="cardHeader">
+            <h2>Results</h2>
+            <p>Totals + cost breakdown for compute and storage.</p>
+          </div>
+
+          <div class="results">
+            <div class="kpis">
+              <div class="kpi">
+                <div class="kpiLabel">Daily</div>
+                <div class="kpiValue" id="kpi-daily">--</div>
+              </div>
+              <div class="kpi">
+                <div class="kpiLabel">Monthly</div>
+                <div class="kpiValue" id="kpi-monthly">--</div>
+              </div>
+              <div class="kpi">
+                <div class="kpiLabel">Yearly</div>
+                <div class="kpiValue" id="kpi-yearly">--</div>
+              </div>
+              <div class="kpi">
+                <div class="kpiLabel">Cost / run</div>
+                <div class="kpiValue" id="kpi-per-run">--</div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="miniBreakdown">
+              <div class="mini">
+                <div class="miniTitle">Compute</div>
+                <div class="miniRow"><span>Compute minutes / day</span><strong id="computeMinutesPerDay">—</strong></div>
+                <div class="miniRow"><span>Total agent-min / day</span><strong id="totalAgentMinutesPerDay">—</strong></div>
+                <div class="miniRow"><span>Compute daily</span><strong id="computeDaily">—</strong></div>
+                <div class="miniRow"><span>Compute monthly</span><strong id="computeMonthly">—</strong></div>
+              </div>
+              <div class="mini">
+                <div class="miniTitle">Storage</div>
+                <div class="miniRow"><span>Storage monthly</span><strong id="storageMonthlyValue">—</strong></div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="charts">
+              <div class="chartCard">
+                <div class="chartTitle">Compute vs Storage (monthly)</div>
+                <canvas id="pieChart" height="160"></canvas>
+              </div>
+              <div class="chartCard">
+                <div class="chartTitle">Totals</div>
+                <canvas id="barChart" height="160"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="overlay" id="loadingOverlay" aria-hidden="true">
+            <div class="spinner" aria-label="Loading"></div>
+            <div class="loadingText">Calculating…</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Tip: these are simplified estimates (great for planning, not billing).</span>
+    </footer>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
+
