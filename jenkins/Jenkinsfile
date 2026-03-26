@@ -1,14 +1,4 @@
-/*
-  Declarative Jenkins Pipeline (simulation)
-  ---------------------------------------
-  This Jenkinsfile demonstrates a typical CI/CD pipeline flow:
-  - Build: install dependencies / compile assets
-  - Test: run automated tests / linters
-  - Deploy: publish artifacts / deploy to an environment
 
-  For this beginner-friendly demo, we simulate time with `sleep 5`
-  to represent work being done by agents/executors.
-*/
 
 pipeline {
   agent any
